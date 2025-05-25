@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Crossword Creator</title>
+  <style>
+    body {
+      font-family: sans-serif;
+      padding: 1rem;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+    }
+    #grid {
+      display: grid;
+      gap: 1px;
+      margin-bottom: 1rem;
+    }
+    .cell {
+      width: 30px;
+      height: 30px;
+      border: 1px solid #ccc;
+      position: relative;
+      background-color: white;
+      text-align: center;
+      font-size: 16px;
+      line-height: 30px;
+      overflow: hidden;
+    }
+    .number {
+      position: absolute;
+      top: 1px;
+      left: 2px;
+      font-size: 8px;
+      line-height: 10px;
+      pointer-events: none;
+      user-select: none;
+    }
+    .black { background: black; color: transparent; }
+    .circled { border: 2px solid red; border-radius: 50%; }
+    .highlighted { background-color: yellow; }
+  </style>
+</head>
+<body>
+  <h1>Crossword Creator</h1>
+  <label><input type="checkbox" id="symmetryToggle"> Enforce 180° Rotational Symmetry</label>
+  <br>
+  <label>Grid Size: <input type="number" id="gridSizeInput" value="15" min="3" max="40"> <button onclick="resizeGrid()">Resize</button></label>
+  <div id="grid"></div>
+  <div>
+    <button onclick="exportImage()">Export as Image</button>
+    <button onclick="alert(validateAmericanStyle() ? 'Valid American Style' : 'Invalid American Style')">Validate</button>
+    <button onclick="saveGrid()">Save</button>
+    <input type="file" id="loadFile" accept=".json" onchange="loadGrid(event)">
+  </div>
+
+  <script>
+    let gridSize = 15;
+    const grid = document.getElementById('grid');
+    const cells = [];
+
+    function createGrid() {
+      grid.innerHTML = '';
+      grid.style.gridTemplateColumns = `repeat(${gridSize}, 30px)`;
+      grid.style.gridTemplateRows = `repeat(${gridSize}, 30px)`;
+      cells.length = 0;
+
+      for (let r = 0; r < gridSize; r++) {
+        for (let c = 0; c < gridSize; c++) {
+          const cell = document.createElement('div');
+          cell.classList.add('cell');
+          cell.dataset.row = r;
+          cell.dataset.col = c;
+
+          const number = document.createElement('div');
+          number.className = 'number';
+          number.innerText = '';
+          cell.appendChild(number);
+
+          const input = document.createElement('div');
+          input.contentEditable = true;
+          input.style.width = '100%';
+          input.style.height = '100%';
+          input.style.outline = 'none';
+          input.style.zIndex = '1';
+          input.style.textTransform = 'uppercase';
+          input.addEventListener('input', () => {
+            input.innerText = input.innerText.slice(0, 1).toUpperCase();
+            updateNumbers();
+          });
+          cell.appendChild(input);
+
+          grid.appendChild(cell);
+          cells.push(cell);
+        }
+      }
+      updateNumbers();
+    }
+
+    function getCell(row, col) {
+      if (row < 0 || col < 0 || row >= gridSize || col >= gridSize) return null;
+      return cells[row * gridSize + col];
+    }
+
+    function isStartOfWord(cell, direction) {
+      if (!cell || cell.classList.contains('black')) return false;
+      const row = parseInt(cell.dataset.row);
+      const col = parseInt(cell.dataset.col);
+      if (direction === 'across') {
+        const left = getCell(row, col - 1);
+        const right = getCell(row, col + 1);
+        return (!left || left.classList.contains('black')) && right && !right.classList.contains('black');
+      } else {
+        const above = getCell(row - 1, col);
+        const below = getCell(row + 1, col);
+        return (!above || above.classList.contains('black')) && below && !below.classList.contains('black');
+      }
+    }
+
+    function updateNumbers() {
+      let count = 1;
+      for (const cell of cells) {
+        const numberDiv = cell.querySelector('.number');
+        numberDiv.innerText = '';
+      }
+      for (const cell of cells) {
+        if (cell.classList.contains('black')) continue;
+        if (isStartOfWord(cell, 'across') || isStartOfWord(cell, 'down')) {
+          const numberDiv = cell.querySelector('.number');
+          numberDiv.innerText = count++;
+        }
+      }
+    }
+
+    function toggleClass(cell, className) {
+      cell.classList.toggle(className);
+    }
+
+    function applySymmetry(row, col, action) {
+      if (!document.getElementById('symmetryToggle').checked) return;
+      const symRow = gridSize - 1 - row;
+      const symCol = gridSize - 1 - col;
+      const symCell = getCell(symRow, symCol);
+      if (!symCell) return;
+      if (action === 'black') symCell.classList.toggle('black');
+    }
+
+    function validateAmericanStyle() {
+      const visited = Array(gridSize).fill(null).map(() => Array(gridSize).fill(false));
+      let startFound = false;
+
+      function dfs(r, c) {
+        if (r < 0 || c < 0 || r >= gridSize || c >= gridSize) return;
+        if (visited[r][c]) return;
+        const cell = getCell(r, c);
+        if (!cell || cell.classList.contains('black')) return;
+        visited[r][c] = true;
+        dfs(r + 1, c);
+        dfs(r - 1, c);
+        dfs(r, c + 1);
+        dfs(r, c - 1);
+      }
+
+      for (let r = 0; r < gridSize; r++) {
+        for (let c = 0; c < gridSize; c++) {
+          const cell = getCell(r, c);
+          if (cell && !cell.classList.contains('black')) {
+            if (!startFound) {
+              dfs(r, c);
+              startFound = true;
+            }
+          }
+        }
+      }
+
+      for (let r = 0; r < gridSize; r++) {
+        for (let c = 0; c < gridSize; c++) {
+          const cell = getCell(r, c);
+          if (cell && !cell.classList.contains('black') && !visited[r][c]) {
+            return false; // Not fully connected
+          }
+        }
+      }
+
+      for (const cell of cells) {
+        const row = parseInt(cell.dataset.row);
+        const col = parseInt(cell.dataset.col);
+        if (!cell.classList.contains('black')) {
+          const letterCount = getWordLength(row, col, 'across');
+          const downCount = getWordLength(row, col, 'down');
+          if (letterCount > 0 && letterCount < 3) return false;
+          if (downCount > 0 && downCount < 3) return false;
+        }
+      }
+
+      return true;
+    }
+
+    function getWordLength(row, col, dir) {
+      let length = 0;
+      while (true) {
+        const cell = getCell(row, col);
+        if (!cell || cell.classList.contains('black')) break;
+        length++;
+        if (dir === 'across') col++;
+        else row++;
+      }
+      return length;
+    }
+
+    document.addEventListener('keydown', (e) => {
+      const active = document.activeElement;
+      const cell = active?.parentElement;
+      if (!cell || !cell.classList.contains('cell')) return;
+      const row = parseInt(cell.dataset.row);
+      const col = parseInt(cell.dataset.col);
+      if (e.key === '.') {
+        toggleClass(cell, 'black');
+        const number = cell.querySelector('.number');
+        number.innerText = '';
+        cell.querySelector('div[contenteditable]').innerText = '';
+        applySymmetry(row, col, 'black');
+        updateNumbers();
+        e.preventDefault();
+      } else if (e.key === ',') {
+        toggleClass(cell, 'circled');
+        e.preventDefault();
+      } else if (e.key === '~') {
+        toggleClass(cell, 'highlighted');
+        e.preventDefault();
+      }
+    });
+
+    function exportImage() {
+      html2canvas(document.querySelector("#grid")).then(canvas => {
+        const link = document.createElement('a');
+        link.download = 'crossword.png';
+        link.href = canvas.toDataURL();
+        link.click();
+      });
+    }
+
+    function saveGrid() {
+      const data = {
+        gridSize,
+        cells: cells.map(cell => ({
+          row: parseInt(cell.dataset.row),
+          col: parseInt(cell.dataset.col),
+          black: cell.classList.contains('black'),
+          circled: cell.classList.contains('circled'),
+          highlighted: cell.classList.contains('highlighted'),
+          letter: cell.querySelector('div[contenteditable]').innerText.trim()
+        }))
+      };
+      const blob = new Blob([JSON.stringify(data)], { type: 'application/json' });
+      const link = document.createElement('a');
+      link.href = URL.createObjectURL(blob);
+      link.download = 'crossword.json';
+      link.click();
+    }
+
+    function loadGrid(event) {
+      const file = event.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        const data = JSON.parse(e.target.result);
+        gridSize = data.gridSize;
+        document.getElementById('gridSizeInput').value = gridSize;
+        createGrid();
+        for (const cellData of data.cells) {
+          const cell = getCell(cellData.row, cellData.col);
+          if (cellData.black) cell.classList.add('black');
+          if (cellData.circled) cell.classList.add('circled');
+          if (cellData.highlighted) cell.classList.add('highlighted');
+          cell.querySelector('div[contenteditable]').innerText = cellData.letter;
+        }
+        updateNumbers();
+      };
+      reader.readAsText(file);
+    }
+
+    function resizeGrid() {
+      gridSize = parseInt(document.getElementById('gridSizeInput').value);
+      createGrid();
+    }
+
+    createGrid();
+  </script>
+
+  <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+</body>
+</html>
