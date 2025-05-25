@@ -6,6 +6,14 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Open Crossword</title>
     <style>
+        :root {
+            --amaranth-purple: #a63446;
+            --baby-powder: #fbfef9;
+            --lapis-lazuli: #0c6291;
+            --black: #000004;
+            --murrey: #7e1946;
+        }
+
         body {
             font-family: sans-serif;
             text-align: center;
@@ -54,6 +62,17 @@
             outline: none;
         }
 
+        .cell input:focus {
+            background-color: var(--lapis-lazuli);
+            border: 1px solid var(--black);
+            opacity: 0.75;
+        }
+
+        .highlight-line {
+            background-color: var(--lapis-lazuli);
+            opacity: 0.5;
+        }
+
         .cell .number {
             position: absolute;
             top: 1px;
@@ -63,7 +82,7 @@
         }
 
         .blacked {
-            background: black;
+            background: black !important;
         }
 
         .circled::after {
@@ -127,6 +146,10 @@
         <input type="file" id="fileInput" style="display:none" onchange="handleFile(event)">
         <button onclick="document.getElementById('fileInput').click()">Import</button>
         <button onclick="exportPDF()">Export PDF</button>
+        <input type="checkbox" id="rotational_symmetry">
+        <label for="rotational_symmetry">
+            Force rotational symmetry
+        </label>
     </div>
     <form>
         <input type="text" id="filename" name="filename " placeholder="Crossword Name">
@@ -141,6 +164,7 @@
         <h3>Down</h3>
         <div id="down-clues"></div>
     </div>
+
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script>
         let size = 15;
@@ -171,7 +195,13 @@
                         const col = c;
 
                         // Special key toggles
-                        if (e.key === '.') toggleClass(cell, 'blacked');
+                        if (e.key === '.') {
+                            toggleClass(cell, 'blacked');
+                            applySymmetry(r, c, 'blacked');
+                            updateNumbers();
+                            updateClueEditor();
+                            e.preventDefault();
+                        }
                         if (e.key === ',') toggleClass(cell, 'circled');
                         if (e.key === '~') toggleClass(cell, 'highlighted');
 
@@ -203,8 +233,10 @@
                     const number = document.createElement('div');
                     number.className = 'number';
                     cell.appendChild(number);
-
+                    
                     grid[r][c] = cell;
+                    cell.dataset.row = r;
+                    cell.dataset.col = c;
                     gridEl.appendChild(cell);
                 }
             }
@@ -374,6 +406,31 @@
             }
             doc.save(filename + '.pdf');
         }
+
+        function applySymmetry(row, col, action) {
+            if (!document.getElementById('rotational_symmetry').checked) return;
+            const symRow = size - 1 - row;
+            const symCol = size - 1 - col;
+            if (symRow === row && symCol === col) return; // Don't double toggle center cell in odd grids
+            const symCell = grid[symRow][symCol];
+            if (!symCell) return;
+            if (action === 'blacked') {
+                const originalCell = grid[row][col];
+                if (originalCell.classList.contains('blacked')) {
+                    symCell.classList.add('blacked');
+                } else {
+                    symCell.classList.remove('blacked');
+                }
+            }
+        }
+
+        document.addEventListener('keydown', (e) => {
+            const active = document.activeElement;
+            const cell = active?.parentElement;
+            if (!cell || !cell.classList.contains('cell')) return;
+            const row = parseInt(cell.dataset.row);
+            const col = parseInt(cell.dataset.col);
+        });
 
         createGrid();
         updateNumbers();
