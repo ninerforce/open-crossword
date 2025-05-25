@@ -1,6 +1,6 @@
 # Open Crossword
 
-Open Crossword is a lightweight, locally hosted crossword puzzle editor built entirely with HTML and JavaScript. It provides a fast and intuitive interface for creating, editing, and exporting crosswords in both American and Quick styles. Keeps all your creations under your control, with no paywalls or accounts needed.
+Open Crossword is a lightweight, locally hosted crossword puzzle editor built entirely with HTML and JavaScript. It provides a fast and intuitive interface for creating, editing, and exporting crosswords in both American and Quick styles. Keep all your creations under your control, with no paywalls or accounts needed.
 
 ## Features
 
@@ -15,7 +15,7 @@ Open Crossword is a lightweight, locally hosted crossword puzzle editor built en
 - 📏 Resizable grid (3x3 to 25x25)  
 - 🖨️ Export to PDF for printing (WIP) 
 - 🔁 Optional 180° rotational symmetry
-- ✅ Enforces American-style crossword rules (WIP)
+- ✅ Enforces American-style crossword rules
 
 ## Usage
 
@@ -25,7 +25,8 @@ Open Crossword is a lightweight, locally hosted crossword puzzle editor built en
    - `.` for black squares
    - `,` for circled cells
    - `~` for highlighted cells
-   - Press any character a second time to remove the effect from a cell.
+   - Once an effect is applied, you can safely delete the special character.
+   - Enter any character a second time to remove the effect from a cell.
 4. Clue numbers are automatically updated as you build your grid.
 5. The clue editor below the grid will populate automatically — just fill in the clues.
 6. Use the control buttons to:
@@ -33,4 +34,9 @@ Open Crossword is a lightweight, locally hosted crossword puzzle editor built en
    - Save or load puzzles as JSON
    - Export clues and grid to PDF
 
-
+## To Do
+1. Rebus support
+2. Wordlists and suggestions
+3. Finalise PDF and .PUZ export
+4. Add support for other rulesets besides American style.
+5. Add support for non-square grids.

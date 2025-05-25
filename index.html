@@ -1,322 +1,384 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Open Crossword</title>
-  <style>
-    body {
-      font-family: sans-serif;
-      text-align: center;
-      margin: 0;
-      padding: 20px;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-    }
-    #controls {
-      margin-bottom: 20px;
-    }
-    #grid {
-      display: grid;
-      grid-template-columns: repeat(15, 30px);
-      grid-template-rows: repeat(15, 30px);
-      gap: 1px;
-      margin-bottom: 20px;
-    }
-    .cell {
-      position: relative;
-      width: 30px;
-      height: 30px;
-      background: white;
-      border: 1px solid #ccc;
-      text-transform: uppercase;
-    }
-    .cell input {
-      width: 100%;
-      height: 100%;
-      border: none;
-      text-align: center;
-      font-size: 16px;
-      text-transform: uppercase;
-      background: none;
-      position: absolute;
-      top: 0;
-      left: 0;
-    }
-    .cell .number {
-      position: absolute;
-      top: 1px;
-      left: 2px;
-      font-size: 8px;
-      pointer-events: none;
-    }
-    .blacked {
-      background: black;
-    }
-    .circled::after {
-      content: "";
-      position: absolute;
-      top: 2px;
-      left: 2px;
-      right: 2px;
-      bottom: 2px;
-      border: 2px solid black;
-      border-radius: 50%;
-      pointer-events: none;
-    }
-    .highlighted {
-      background: yellow;
-    }
-    textarea {
-      width: 400px;
-      height: 150px;
-    }
-    #clue-editor {
-      max-width: 600px;
-      margin-top: 20px;
-      text-align: left;
-    }
-    #clue-editor h3 {
-      margin-top: 20px;
-    }
-    .clue-entry {
-      display: flex;
-      align-items: center;
-      margin-bottom: 5px;
-    }
-    .clue-entry span {
-      min-width: 60px;
-      display: inline-block;
-    }
-    .clue-entry input[type="text"] {
-      flex: 1;
-      margin-left: 5px;
-    }
-  </style>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Open Crossword</title>
+    <style>
+        body {
+            font-family: sans-serif;
+            text-align: center;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        #controls {
+            margin-bottom: 20px;
+        }
+
+        #grid {
+            display: grid;
+            grid-template-columns: repeat(15, 30px);
+            grid-template-rows: repeat(15, 30px);
+            gap: 1px;
+            margin-bottom: 20px;
+        }
+
+        .cell {
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+            width: 30px;
+            height: 30px;
+            background: white;
+            border: 1px solid #ccc;
+            text-transform: uppercase;
+        }
+
+        .cell input {
+            width: 100%;
+            height: 100%;
+            border: none;
+            font-size: 16px;
+            text-transform: uppercase;
+            background: none;
+            text-align: center;
+            padding: 0;
+            margin: 0;
+            outline: none;
+        }
+
+        .cell .number {
+            position: absolute;
+            top: 1px;
+            left: 2px;
+            font-size: 8px;
+            pointer-events: none;
+        }
+
+        .blacked {
+            background: black;
+        }
+
+        .circled::after {
+            content: "";
+            position: absolute;
+            top: 1px;
+            left: 1px;
+            right: 1px;
+            bottom: 1px;
+            border: 1px solid black;
+            border-radius: 50%;
+            pointer-events: none;
+        }
+
+        .highlighted {
+            background: yellow;
+        }
+
+        textarea {
+            width: 400px;
+            height: 150px;
+        }
+
+        #clue-editor {
+            max-width: 600px;
+            margin-top: 20px;
+            text-align: left;
+        }
+
+        #clue-editor h3 {
+            margin-top: 20px;
+        }
+
+        .clue-entry {
+            display: flex;
+            align-items: center;
+            margin-bottom: 5px;
+        }
+
+        .clue-entry span {
+            min-width: 60px;
+            display: inline-block;
+        }
+
+        .clue-entry input[type="text"] {
+            flex: 1;
+            margin-left: 5px;
+        }
+    </style>
 </head>
+
 <body>
-  <h1>
-    Open Crossword
-  </h1>
-  <div id="controls">
-    <label>Size: <input type="number" id="size" value="15" min="3" max="25" /></label>
-    <button onclick="resizeGrid()">Resize Grid</button>
-    <button onclick="saveJSON()">Save</button>
-    <button onclick="loadJSON()">Load</button>
-    <input type="file" id="fileInput" style="display:none" onchange="handleFile(event)">
-    <button onclick="document.getElementById('fileInput').click()">Import</button>
-    <button onclick="exportPDF()">Export PDF</button>
-  </div>
-  <div id="grid"></div>
-  <div id="clue-editor">
-    <h3>Across</h3>
-    <div id="across-clues"></div>
-    <h3>Down</h3>
-    <div id="down-clues"></div>
-  </div>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-  <script>
-    let size = 15;
-    let grid = [];
+    <h1>
+        Open Crossword
+    </h1>
+    <div id="controls">
+        <label>Size: <input type="number" id="size" value="15" min="3" max="25" /></label>
+        <button onclick="resizeGrid()">Resize Grid</button>
+        <button onclick="saveJSON()">Save</button>
+        <button onclick="loadJSON()">Load</button>
+        <input type="file" id="fileInput" style="display:none" onchange="handleFile(event)">
+        <button onclick="document.getElementById('fileInput').click()">Import</button>
+        <button onclick="exportPDF()">Export PDF</button>
+    </div>
+    <form>
+        <input type="text" id="filename" name="filename " placeholder="Crossword Name">
+    </form>
+    <p>
 
-    function createGrid() {
-      const gridEl = document.getElementById('grid');
-      gridEl.innerHTML = '';
-      gridEl.style.gridTemplateColumns = `repeat(${size}, 30px)`;
-      gridEl.style.gridTemplateRows = `repeat(${size}, 30px)`;
-      grid = [];
+    </p>
+    <div id="grid"></div>
+    <div id="clue-editor">
+        <h3>Across</h3>
+        <div id="across-clues"></div>
+        <h3>Down</h3>
+        <div id="down-clues"></div>
+    </div>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script>
+        let size = 15;
+        let grid = [];
 
-      for (let r = 0; r < size; r++) {
-        grid[r] = [];
-        for (let c = 0; c < size; c++) {
-          const cell = document.createElement('div');
-          cell.className = 'cell';
+        function createGrid() {
+            const gridEl = document.getElementById('grid');
+            gridEl.innerHTML = '';
+            gridEl.style.gridTemplateColumns = `repeat(${size}, 30px)`;
+            gridEl.style.gridTemplateRows = `repeat(${size}, 30px)`;
+            grid = [];
 
-          const input = document.createElement('input');
-          input.maxLength = 1;
-          input.addEventListener('input', e => {
-            input.value = input.value.toUpperCase();
+            for (let r = 0; r < size; r++) {
+                grid[r] = [];
+                for (let c = 0; c < size; c++) {
+                    const cell = document.createElement('div');
+                    cell.className = 'cell';
+
+                    const input = document.createElement('input');
+                    input.maxLength = 1;
+                    input.addEventListener('input', e => {
+                        input.value = input.value.toUpperCase();
+                        updateNumbers();
+                        updateClueEditor();
+                    });
+                    input.addEventListener('keydown', e => {
+                        const row = r;
+                        const col = c;
+
+                        // Special key toggles
+                        if (e.key === '.') toggleClass(cell, 'blacked');
+                        if (e.key === ',') toggleClass(cell, 'circled');
+                        if (e.key === '~') toggleClass(cell, 'highlighted');
+
+                        // Arrow key navigation
+                        if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(e.key)) {
+                            e.preventDefault(); // Prevent page scrolling
+                            let targetRow = row;
+                            let targetCol = col;
+
+                            switch (e.key) {
+                                case 'ArrowUp': targetRow = row > 0 ? row - 1 : row; break;
+                                case 'ArrowDown': targetRow = row < size - 1 ? row + 1 : row; break;
+                                case 'ArrowLeft': targetCol = col > 0 ? col - 1 : col; break;
+                                case 'ArrowRight': targetCol = col < size - 1 ? col + 1 : col; break;
+                            }
+
+                            const targetCell = grid[targetRow][targetCol];
+                            if (targetCell) {
+                                const targetInput = targetCell.querySelector('input');
+                                targetInput.focus();
+                            }
+                        }
+
+                        updateNumbers();
+                        updateClueEditor();
+                    });
+                    cell.appendChild(input);
+
+                    const number = document.createElement('div');
+                    number.className = 'number';
+                    cell.appendChild(number);
+
+                    grid[r][c] = cell;
+                    gridEl.appendChild(cell);
+                }
+            }
+        }
+
+        function toggleClass(cell, className) {
+            cell.classList.toggle(className);
+        }
+
+        function resizeGrid() {
+            size = parseInt(document.getElementById('size').value);
+            createGrid();
             updateNumbers();
             updateClueEditor();
-          });
-          input.addEventListener('keydown', e => {
-            if (e.key === '.') toggleClass(cell, 'blacked');
-            if (e.key === ',') toggleClass(cell, 'circled');
-            if (e.key === '~') toggleClass(cell, 'highlighted');
-            updateNumbers();
-            updateClueEditor();
-          });
-          cell.appendChild(input);
-
-          const number = document.createElement('div');
-          number.className = 'number';
-          cell.appendChild(number);
-
-          grid[r][c] = cell;
-          gridEl.appendChild(cell);
         }
-      }
-    }
 
-    function toggleClass(cell, className) {
-      cell.classList.toggle(className);
-    }
+        function updateNumbers() {
+            let count = 1;
+            for (let r = 0; r < size; r++) {
+                for (let c = 0; c < size; c++) {
+                    const cell = grid[r][c];
+                    const input = cell.querySelector('input');
+                    const number = cell.querySelector('.number');
 
-    function resizeGrid() {
-      size = parseInt(document.getElementById('size').value);
-      createGrid();
-      updateNumbers();
-      updateClueEditor();
-    }
+                    const isStartOfAcross = c === 0 || grid[r][c - 1].classList.contains('blacked');
+                    const isStartOfDown = r === 0 || grid[r - 1][c].classList.contains('blacked');
+                    const isLetter = !cell.classList.contains('blacked');
 
-    function updateNumbers() {
-      let count = 1;
-      for (let r = 0; r < size; r++) {
-        for (let c = 0; c < size; c++) {
-          const cell = grid[r][c];
-          const input = cell.querySelector('input');
-          const number = cell.querySelector('.number');
-
-          const isStartOfAcross = c === 0 || grid[r][c - 1].classList.contains('blacked');
-          const isStartOfDown = r === 0 || grid[r - 1][c].classList.contains('blacked');
-          const isLetter = !cell.classList.contains('blacked');
-
-          if (isLetter && ((isStartOfAcross && c + 1 < size && !grid[r][c + 1].classList.contains('blacked')) ||
-              (isStartOfDown && r + 1 < size && !grid[r + 1][c].classList.contains('blacked')))) {
-            number.textContent = count++;
-          } else {
-            number.textContent = '';
-          }
+                    if (isLetter && ((isStartOfAcross && c + 1 < size && !grid[r][c + 1].classList.contains('blacked')) ||
+                        (isStartOfDown && r + 1 < size && !grid[r + 1][c].classList.contains('blacked')))) {
+                        number.textContent = count++;
+                    } else {
+                        number.textContent = '';
+                    }
+                }
+            }
         }
-      }
-    }
 
-    function updateClueEditor() {
-      const acrossClues = document.getElementById('across-clues');
-      const downClues = document.getElementById('down-clues');
-      acrossClues.innerHTML = '';
-      downClues.innerHTML = '';
+        function updateClueEditor() {
+            const acrossClues = document.getElementById('across-clues');
+            const downClues = document.getElementById('down-clues');
+            acrossClues.innerHTML = '';
+            downClues.innerHTML = '';
 
-      let added = {};
+            let added = {};
 
-      for (let r = 0; r < size; r++) {
-        for (let c = 0; c < size; c++) {
-          const cell = grid[r][c];
-          const number = cell.querySelector('.number').textContent;
-          if (!number) continue;
+            for (let r = 0; r < size; r++) {
+                for (let c = 0; c < size; c++) {
+                    const cell = grid[r][c];
+                    const number = cell.querySelector('.number').textContent;
+                    if (!number) continue;
 
-          // Across
-          if ((c === 0 || grid[r][c - 1].classList.contains('blacked')) && c + 1 < size && !grid[r][c + 1].classList.contains('blacked')) {
-            let word = '';
-            let cc = c;
-            while (cc < size && !grid[r][cc].classList.contains('blacked')) {
-              word += grid[r][cc].querySelector('input').value || '.';
-              cc++;
+                    // Across
+                    if ((c === 0 || grid[r][c - 1].classList.contains('blacked')) && c + 1 < size && !grid[r][c + 1].classList.contains('blacked')) {
+                        let word = '';
+                        let cc = c;
+                        while (cc < size && !grid[r][cc].classList.contains('blacked')) {
+                            word += grid[r][cc].querySelector('input').value || '.';
+                            cc++;
+                        }
+                        if (!added[`A${number}`]) {
+                            addClueRow(acrossClues, number, word, 'Across');
+                            added[`A${number}`] = true;
+                        }
+                    }
+
+                    // Down
+                    if ((r === 0 || grid[r - 1][c].classList.contains('blacked')) && r + 1 < size && !grid[r + 1][c].classList.contains('blacked')) {
+                        let word = '';
+                        let rr = r;
+                        while (rr < size && !grid[rr][c].classList.contains('blacked')) {
+                            word += grid[rr][c].querySelector('input').value || '.';
+                            rr++;
+                        }
+                        if (!added[`D${number}`]) {
+                            addClueRow(downClues, number, word, 'Down');
+                            added[`D${number}`] = true;
+                        }
+                    }
+                }
             }
-            if (!added[`A${number}`]) {
-              addClueRow(acrossClues, number, word, 'Across');
-              added[`A${number}`] = true;
-            }
-          }
-
-          // Down
-          if ((r === 0 || grid[r - 1][c].classList.contains('blacked')) && r + 1 < size && !grid[r + 1][c].classList.contains('blacked')) {
-            let word = '';
-            let rr = r;
-            while (rr < size && !grid[rr][c].classList.contains('blacked')) {
-              word += grid[rr][c].querySelector('input').value || '.';
-              rr++;
-            }
-            if (!added[`D${number}`]) {
-              addClueRow(downClues, number, word, 'Down');
-              added[`D${number}`] = true;
-            }
-          }
         }
-      }
-    }
 
-    function addClueRow(container, number, word, direction) {
-      const div = document.createElement('div');
-      div.className = 'clue-entry';
-      div.innerHTML = `<span>${number} </span><span>${word}</span><input type="text" placeholder="Enter clue" />`;
-      container.appendChild(div);
-    }
-
-    function saveJSON() {
-      const data = { size, cells: [], clues: [] };
-      for (let r = 0; r < size; r++) {
-        for (let c = 0; c < size; c++) {
-          const cell = grid[r][c];
-          const input = cell.querySelector('input').value;
-          data.cells.push({ r, c, value: input, blacked: cell.classList.contains('blacked'), circled: cell.classList.contains('circled'), highlighted: cell.classList.contains('highlighted') });
+        function addClueRow(container, number, word, direction) {
+            const div = document.createElement('div');
+            div.className = 'clue-entry';
+            div.innerHTML = `<span>${number} </span><span>${word}</span><input type="text" placeholder="Enter clue" />`;
+            container.appendChild(div);
         }
-      }
-      const clues = document.querySelectorAll('#clue-editor input[type="text"]');
-      clues.forEach(clue => data.clues.push(clue.value));
-      const blob = new Blob([JSON.stringify(data)], { type: 'application/json' });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = 'crossword.json';
-      a.click();
-    }
 
-    function loadJSON() {
-      document.getElementById('fileInput').click();
-    }
+        function saveJSON() {
+            const data = { size, cells: [], clues: [] };
+            for (let r = 0; r < size; r++) {
+                for (let c = 0; c < size; c++) {
+                    const cell = grid[r][c];
+                    const input = cell.querySelector('input').value;
+                    data.cells.push({ r, c, value: input, blacked: cell.classList.contains('blacked'), circled: cell.classList.contains('circled'), highlighted: cell.classList.contains('highlighted') });
+                }
+            }
+            const clues = document.querySelectorAll('#clue-editor input[type="text"]');
+            clues.forEach(clue => data.clues.push(clue.value));
+            const blob = new Blob([JSON.stringify(data)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            const filename = document.getElementById('filename').value.trim();
 
-    function handleFile(event) {
-      const file = event.target.files[0];
-      const reader = new FileReader();
-      reader.onload = e => {
-        const data = JSON.parse(e.target.result);
-        size = data.size;
-        document.getElementById('size').value = size;
+            if (!filename) {
+                filename = "crossword"
+            }
+
+            a.href = url;
+            a.download = filename + '.json';
+            a.click();
+        }
+
+        function loadJSON() {
+            document.getElementById('fileInput').click();
+        }
+
+        function handleFile(event) {
+            const file = event.target.files[0];
+            const reader = new FileReader();
+            reader.onload = e => {
+                const data = JSON.parse(e.target.result);
+                size = data.size;
+                document.getElementById('size').value = size;
+                createGrid();
+                data.cells.forEach(cell => {
+                    const el = grid[cell.r][cell.c];
+                    el.querySelector('input').value = cell.value;
+                    if (cell.blacked) el.classList.add('blacked');
+                    if (cell.circled) el.classList.add('circled');
+                    if (cell.highlighted) el.classList.add('highlighted');
+                });
+                updateNumbers();
+                updateClueEditor();
+                const clues = document.querySelectorAll('#clue-editor input[type="text"]');
+                clues.forEach((clue, i) => clue.value = data.clues[i] || '');
+            };
+            reader.readAsText(file);
+        }
+
+        function exportPDF() {
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF();
+            doc.setFontSize(10);
+            doc.text("Crossword Grid (not drawn in this demo)", 10, 10);
+            doc.addPage();
+
+            let y = 10;
+            const clues = document.querySelectorAll('.clue-entry');
+            clues.forEach(entry => {
+                const number = entry.children[0].textContent;
+                const word = entry.children[1].textContent;
+                const clue = entry.children[2].value;
+                doc.text(`${number} ${word}: ${clue}`, 10, y);
+                y += 5;
+                if (y > 280) {
+                    doc.addPage();
+                    y = 10;
+                }
+            });
+            const filename = document.getElementById('filename').value.trim();
+
+            if (!filename) {
+                filename = "crossword"
+            }
+            doc.save(filename + '.pdf');
+        }
+
         createGrid();
-        data.cells.forEach(cell => {
-          const el = grid[cell.r][cell.c];
-          el.querySelector('input').value = cell.value;
-          if (cell.blacked) el.classList.add('blacked');
-          if (cell.circled) el.classList.add('circled');
-          if (cell.highlighted) el.classList.add('highlighted');
-        });
         updateNumbers();
         updateClueEditor();
-        const clues = document.querySelectorAll('#clue-editor input[type="text"]');
-        clues.forEach((clue, i) => clue.value = data.clues[i] || '');
-      };
-      reader.readAsText(file);
-    }
-
-    function exportPDF() {
-      const { jsPDF } = window.jspdf;
-      const doc = new jsPDF();
-      doc.setFontSize(10);
-      doc.text("Crossword Grid (not drawn in this demo)", 10, 10);
-      doc.addPage();
-
-      let y = 10;
-      const clues = document.querySelectorAll('.clue-entry');
-      clues.forEach(entry => {
-        const number = entry.children[0].textContent;
-        const word = entry.children[1].textContent;
-        const clue = entry.children[2].value;
-        doc.text(`${number} ${word}: ${clue}`, 10, y);
-        y += 5;
-        if (y > 280) {
-          doc.addPage();
-          y = 10;
-        }
-      });
-
-      doc.save('crossword.pdf');
-    }
-
-    createGrid();
-    updateNumbers();
-    updateClueEditor();
-  </script>
+    </script>
 </body>
+
 </html>
