@@ -435,6 +435,13 @@
         createGrid();
         updateNumbers();
         updateClueEditor();
+
+        window.addEventListener('beforeunload', (e) => {
+            // This message is usually ignored by modern browsers,
+            // but returning a value triggers the confirmation dialog.
+            e.preventDefault();
+            e.returnValue = '';
+        });
     </script>
 </body>
 
