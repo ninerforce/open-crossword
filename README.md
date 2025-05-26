@@ -41,3 +41,7 @@ Open Crossword is a lightweight, locally hosted crossword puzzle editor built en
 4. Add support for other rulesets besides American style.
 5. Add support for non-square grids.
 6. Make it look less like baby's first HTML site.
+
+## Acknowledgements
+
+Thanks to `https://favicon.io` for the Favicon

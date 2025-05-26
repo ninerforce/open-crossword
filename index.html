@@ -5,13 +5,16 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Open Crossword</title>
+
+    <link rel="icon" href="favicon.ico" type="image/x-icon">
+
     <style>
         :root {
             --amaranth-purple: #a63446;
             --baby-powder: #fbfef9;
             --lapis-lazuli: #0c6291;
             --black: #000004;
-            --murrey: #7e1946;
+            --buff: #DB995A;
         }
 
         body {
@@ -22,6 +25,7 @@
             display: flex;
             flex-direction: column;
             align-items: center;
+            background-color: var(--baby-powder);
         }
 
         #controls {
@@ -30,8 +34,8 @@
 
         #grid {
             display: grid;
-            grid-template-columns: repeat(15, 30px);
-            grid-template-rows: repeat(15, 30px);
+            grid-template-columns: repeat(15, 50px);
+            grid-template-rows: repeat(15, 50px);
             gap: 1px;
             margin-bottom: 20px;
         }
@@ -42,8 +46,8 @@
             align-items: center;
             justify-content: center;
             overflow: hidden;
-            width: 30px;
-            height: 30px;
+            width: 50px;
+            height: 50px;
             background: white;
             border: 1px solid #ccc;
             text-transform: uppercase;
@@ -53,7 +57,7 @@
             width: 100%;
             height: 100%;
             border: none;
-            font-size: 16px;
+            font-size: 25px;
             text-transform: uppercase;
             background: none;
             text-align: center;
@@ -77,7 +81,7 @@
             position: absolute;
             top: 1px;
             left: 2px;
-            font-size: 8px;
+            font-size: 12px;
             pointer-events: none;
         }
 
@@ -129,16 +133,98 @@
 
         .clue-entry input[type="text"] {
             flex: 1;
-            margin-left: 5px;
+            margin-left: 
+            5px;
         }
+
+        .container {
+            max-width: 1000px;
+            width: 95%;
+            margin: 0 auto;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+
+        #controls {
+            margin-bottom: 20px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            justify-content: center;
+            align-items: center;
+        }
+
+        #controls label, #controls input[type="number"] {
+            font-weight: bold;
+            font-size: 14px;
+        }
+
+        #controls input[type="number"], #filename {
+            width: 60px;
+            padding: 5px;
+            border-radius: 4px;
+            border: 1px solid #ccc;
+            font-size: 14px;
+        }
+
+        #controls button {
+            padding: 6px 12px;
+            border-radius: 5px;
+            border: none;
+            background-color: var(--amaranth-purple);
+            color: white;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background-color 0.25s ease;
+        }
+
+        #controls button:hover {
+            background-color: #8b2f3a;
+        }
+
+        form {
+            margin: 10px 0 20px;
+        }
+
+        #filename {
+            padding: 8px;
+            font-size: 16px;
+            width: 100%;
+            max-width: 300px;
+            border-radius: 5px;
+            border: 1px solid #ccc;
+            box-sizing: border-box;
+        }
+
+        #grid {
+            margin: 0 auto 20px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            border-radius: 4px;
+        }
+
+        #clue-editor {
+            background: #fff;
+            padding: 15px 20px;
+            border-radius: 6px;
+            box-shadow: 0 2px 6px rgb(0 0 0 / 0.1);
+        }
+
     </style>
 </head>
 
 <body>
-    <h1>
+    <h1 style="
+    background-color: var(--amaranth-purple);
+    width: 100vw;
+    margin: 0;
+    padding: 40px 0;
+    color: white;
+    text-align: center;
+    ">
         Open Crossword
     </h1>
-    <div id="controls">
+    <p></p>
+    <div class="container" id="controls">
         <label>Size: <input type="number" id="size" value="15" min="3" max="25" /></label>
         <button onclick="resizeGrid()">Resize Grid</button>
         <button onclick="saveJSON()">Save</button>
@@ -146,12 +232,15 @@
         <input type="file" id="fileInput" style="display:none" onchange="handleFile(event)">
         <button onclick="document.getElementById('fileInput').click()">Import</button>
         <button onclick="exportPDF()">Export PDF</button>
+        <button onclick="exportImage()">Export as Image</button>
         <input type="checkbox" id="rotational_symmetry">
         <label for="rotational_symmetry">
             Force rotational symmetry
         </label>
+        
     </div>
     <form>
+        
         <input type="text" id="filename" name="filename " placeholder="Crossword Name">
     </form>
     <p>
@@ -166,6 +255,7 @@
     </div>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <script>
         let size = 15;
         let grid = [];
@@ -173,8 +263,8 @@
         function createGrid() {
             const gridEl = document.getElementById('grid');
             gridEl.innerHTML = '';
-            gridEl.style.gridTemplateColumns = `repeat(${size}, 30px)`;
-            gridEl.style.gridTemplateRows = `repeat(${size}, 30px)`;
+            gridEl.style.gridTemplateColumns = `repeat(${size}, 50px)`;
+            gridEl.style.gridTemplateRows = `repeat(${size}, 50px)`;
             grid = [];
 
             for (let r = 0; r < size; r++) {
@@ -406,6 +496,43 @@
             }
             doc.save(filename + '.pdf');
         }
+
+        function exportImage() {
+            const gridEl = document.getElementById('grid');
+
+            // Clone the grid
+            const clone = gridEl.cloneNode(true);
+
+            // Replace input elements with divs for consistent rendering
+            clone.querySelectorAll('input').forEach(input => {
+                const val = input.value;
+                const div = document.createElement('div');
+                div.textContent = val;
+                div.style.fontSize = '25px';
+                div.style.textAlign = 'center';
+                div.style.lineHeight = '50px';
+                div.style.width = '100%';
+                div.style.height = '100%';
+                div.style.textTransform = 'uppercase';
+                div.style.fontFamily = 'sans-serif';
+
+                const parent = input.parentNode;
+                parent.replaceChild(div, input);
+            });
+
+            document.body.appendChild(clone); // temporarily add to DOM for rendering
+            clone.style.position = 'absolute';
+            clone.style.left = '-9999px';
+
+            html2canvas(clone).then(canvas => {
+                const link = document.createElement('a');
+                link.download = 'crossword.png';
+                link.href = canvas.toDataURL();
+                link.click();
+                clone.remove(); // Clean up
+            });
+        }
+
 
         function applySymmetry(row, col, action) {
             if (!document.getElementById('rotational_symmetry').checked) return;
