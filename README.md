@@ -19,17 +19,19 @@ Open Crossword is a lightweight, locally hosted crossword puzzle editor built en
 
 ## Usage
 
-1. Open `index.html` in any modern web browser.
-2. Click cells to type letters (input is automatically capitalized).
-3. Use special characters to mark cells:
+1. Open the directory in your terminal.
+2. Run `python -m http.server 8000`
+3. Open `http://localhost:8000/index.html` in your preferred browser.
+4. Click cells to type letters (input is automatically capitalized).
+5. Use special characters to mark cells:
    - `.` for black squares
    - `,` for circled cells
    - `~` for highlighted cells
    - Once an effect is applied, you can safely delete the special character.
    - Enter any character a second time to remove the effect from a cell.
-4. Clue numbers are automatically updated as you build your grid.
-5. The clue editor below the grid will populate automatically — just fill in the clues.
-6. Use the control buttons to:
+6. Clue numbers are automatically updated as you build your grid.
+7. The clue editor below the grid will populate automatically — just fill in the clues.
+8. Use the control buttons to:
    - Resize the grid
    - Save or load puzzles as JSON
    - Export clues and grid to PDF
@@ -45,3 +47,4 @@ Open Crossword is a lightweight, locally hosted crossword puzzle editor built en
 ## Acknowledgements
 
 Thanks to `https://favicon.io` for the Favicon
+Thanks to dwyl for the word list from `https://github.com/dwyl/english-words`

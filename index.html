@@ -133,8 +133,8 @@
 
         .clue-entry input[type="text"] {
             flex: 1;
-            margin-left: 
-            5px;
+            margin-left:
+                5px;
         }
 
         .container {
@@ -154,12 +154,14 @@
             align-items: center;
         }
 
-        #controls label, #controls input[type="number"] {
+        #controls label,
+        #controls input[type="number"] {
             font-weight: bold;
             font-size: 14px;
         }
 
-        #controls input[type="number"], #filename {
+        #controls input[type="number"],
+        #filename {
             width: 60px;
             padding: 5px;
             border-radius: 4px;
@@ -198,7 +200,7 @@
 
         #grid {
             margin: 0 auto 20px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
             border-radius: 4px;
         }
 
@@ -209,21 +211,32 @@
             box-shadow: 0 2px 6px rgb(0 0 0 / 0.1);
         }
 
+        #main-container {
+            display: flex;
+            justify-content: center;
+            gap: 40px;
+            align-items: flex-start;
+            margin-bottom: 20px;
+        }
+
+        #word-list-box {
+            width: 250px;
+            background-color: var(--baby-powder);
+            border: 1px solid #ccc;
+            padding: 15px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            border-radius: 8px;
+            text-align: left;
+        }
+
+        .highlighted-word {
+            background-color: var(--lapis-lazuli);
+            opacity: 0.5;
+        }
     </style>
 </head>
 
 <body>
-    <h1 style="
-    background-color: var(--amaranth-purple);
-    width: 100vw;
-    margin: 0;
-    padding: 40px 0;
-    color: white;
-    text-align: center;
-    ">
-        Open Crossword
-    </h1>
-    <p></p>
     <div class="container" id="controls">
         <label>Size: <input type="number" id="size" value="15" min="3" max="25" /></label>
         <button onclick="resizeGrid()">Resize Grid</button>
@@ -237,16 +250,34 @@
         <label for="rotational_symmetry">
             Force rotational symmetry
         </label>
-        
+
     </div>
+    <h1 style="
+    background-color: var(--amaranth-purple);
+    width: 100vw;
+    margin: 0;
+    padding: 40px 0;
+    color: white;
+    text-align: center;
+    ">
+        Open Crossword
+    </h1>
+    <p></p>
+
     <form>
-        
+
         <input type="text" id="filename" name="filename " placeholder="Crossword Name">
     </form>
     <p>
 
     </p>
-    <div id="grid"></div>
+    <div id="main-container">
+        <div id="grid"></div>
+        <div id="word-list-box" style="width: 200px; text-align: left;">
+            <h3>Suggestions</h3>
+            <ul id="suggestion-list" style="list-style: none; padding: 0;"></ul>
+        </div>
+    </div>
     <div id="clue-editor">
         <h3>Across</h3>
         <div id="across-clues"></div>
@@ -259,6 +290,22 @@
     <script>
         let size = 15;
         let grid = [];
+        let lastDirection = 'across';
+        let wordList = [];
+        let wordListReady = false;
+
+        function loadWordlist() {
+            console.log("Fetching wordlist...");
+            fetch('words.txt')
+                .then(response => response.text())
+                .then(text => {
+                    wordlist = text.split('\n').map(word => word.trim().toUpperCase()).filter(Boolean);
+                    console.log(`Loaded ${wordlist.length} words.`);
+                })
+                .catch(err => {
+                    console.error('Failed to load word list:', err);
+                });
+        }
 
         function createGrid() {
             const gridEl = document.getElementById('grid');
@@ -297,22 +344,44 @@
 
                         // Arrow key navigation
                         if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(e.key)) {
-                            e.preventDefault(); // Prevent page scrolling
+
+                            e.preventDefault();
                             let targetRow = row;
                             let targetCol = col;
 
-                            switch (e.key) {
-                                case 'ArrowUp': targetRow = row > 0 ? row - 1 : row; break;
-                                case 'ArrowDown': targetRow = row < size - 1 ? row + 1 : row; break;
-                                case 'ArrowLeft': targetCol = col > 0 ? col - 1 : col; break;
-                                case 'ArrowRight': targetCol = col < size - 1 ? col + 1 : col; break;
+                            if (['ArrowUp', 'ArrowDown'].includes(e.key) && lastDirection == 'across') {
+                                clearHighlights();
+                                lastDirection = 'down'
+                                updateSuggestions(row, col);
+                                highlightLine(targetRow, targetCol);
+                            }
+                            else if (['ArrowLeft', 'ArrowRight'].includes(e.key) && lastDirection == 'down') {
+                                clearHighlights();
+                                lastDirection = 'across';
+                                updateSuggestions(row, col);
+                                highlightLine(targetRow, targetCol);
+                            }
+                            else {
+
+                                clearHighlights();
+                                switch (e.key) {
+                                    case 'ArrowUp': targetRow = row > 0 ? row - 1 : row; lastDirection = 'down'; break;
+                                    case 'ArrowDown': targetRow = row < size - 1 ? row + 1 : row; lastDirection = 'down'; break;
+                                    case 'ArrowLeft': targetCol = col > 0 ? col - 1 : col; lastDirection = 'across'; break;
+                                    case 'ArrowRight': targetCol = col < size - 1 ? col + 1 : col; lastDirection = 'across'; break;
+                                }
+
+                                const targetCell = grid[targetRow][targetCol];
+                                if (targetCell) {
+                                    const targetInput = targetCell.querySelector('input');
+                                    targetInput.focus();
+                                }
+
+                                updateSuggestions(row, col);
+                                highlightLine(targetRow, targetCol);
                             }
 
-                            const targetCell = grid[targetRow][targetCol];
-                            if (targetCell) {
-                                const targetInput = targetCell.querySelector('input');
-                                targetInput.focus();
-                            }
+
                         }
 
                         updateNumbers();
@@ -323,11 +392,36 @@
                     const number = document.createElement('div');
                     number.className = 'number';
                     cell.appendChild(number);
-                    
+
                     grid[r][c] = cell;
                     cell.dataset.row = r;
                     cell.dataset.col = c;
                     gridEl.appendChild(cell);
+
+                    input.addEventListener('focus', () => {
+                        const row = r;
+                        const col = c;
+                        clearHighlights();
+                        highlightLine(row, col);
+                        updateSuggestions(row, col);
+                    });
+
+                    input.addEventListener('dblclick', () => {
+                        lastDirection = (lastDirection === 'across') ? 'down' : 'across';
+
+                        const row = r;
+                        const col = c;
+                        clearHighlights();
+                        highlightLine(row, col);
+                        updateSuggestions(row, col);
+                    });
+                    document.addEventListener('click', (event) => {
+                        // If the click target is NOT inside the grid element...
+                        if (!gridEl.contains(event.target)) {
+                            clearHighlights();
+                        }
+                    });
+
                 }
             }
         }
@@ -551,6 +645,101 @@
             }
         }
 
+        function updateSuggestions(row, col) {
+            if (!wordListReady) {
+                console.warn('Suggestions blocked: word list not ready');
+                console.log('Word list length:', wordList.length);
+
+                return;
+            }
+
+            let pattern = '';
+            let startRow = row;
+            let startCol = col;
+
+            if (lastDirection === 'across') {
+                while (startCol > 0 && !grid[row][startCol - 1].classList.contains('blacked')) startCol--;
+                let c = startCol;
+                while (c < size && !grid[row][c].classList.contains('blacked')) {
+                    const val = grid[row][c].querySelector('input').value;
+                    pattern += val ? val.toUpperCase() : '.';
+                    c++;
+                }
+            } else {
+                while (startRow > 0 && !grid[startRow - 1][col].classList.contains('blacked')) startRow--;
+                let r = startRow;
+                while (r < size && !grid[r][col].classList.contains('blacked')) {
+                    const val = grid[r][col].querySelector('input').value;
+                    pattern += val ? val.toUpperCase() : '.';
+                    r++;
+                }
+            }
+
+            console.log(`Pattern: ${pattern} | Wordlist length: ${wordlist.length}`);
+            showSuggestions(pattern);
+        }
+
+
+        function showSuggestions(pattern) {
+            if (!wordListReady) {
+                console.warn('Word list not ready yet');
+                return;
+            }
+            pattern = pattern.toUpperCase();
+            const regex = new RegExp('^' + pattern.replace(/\./g, '.') + '$');
+            const matches = wordList.filter(word => regex.test(word));
+
+            const list = document.getElementById('suggestion-list');
+            list.innerHTML = '';
+            if (matches.length === 0) {
+                const li = document.createElement('li');
+                li.textContent = '(no matches)';
+                list.appendChild(li);
+            } else {
+                matches.slice(0, 10).forEach(word => {
+                    const li = document.createElement('li');
+                    li.textContent = word;
+                    list.appendChild(li);
+                });
+            }
+        }
+
+        function highlightLine(row, col) {
+            clearHighlights();
+
+            if (lastDirection === 'across') {
+                let c = col;
+                // Move left until hitting edge or black cell
+                while (c >= 0 && !grid[row][c].classList.contains('blacked')) c--;
+                c++;
+                // Highlight across, excluding focused cell
+                while (c < size && !grid[row][c].classList.contains('blacked')) {
+                    if (c !== col) {
+                        grid[row][c].classList.add('highlighted-word');
+                    }
+                    c++;
+                }
+            } else { // direction is down
+                let r = row;
+                while (r >= 0 && !grid[r][col].classList.contains('blacked')) r--;
+                r++;
+                while (r < size && !grid[r][col].classList.contains('blacked')) {
+                    if (r !== row) {
+                        grid[r][col].classList.add('highlighted-word');
+                    }
+                    r++;
+                }
+            }
+        }
+
+        function clearHighlights() {
+            for (let r = 0; r < size; r++) {
+                for (let c = 0; c < size; c++) {
+                    grid[r][c].classList.remove('highlighted-word');
+                }
+            }
+        }
+
         document.addEventListener('keydown', (e) => {
             const active = document.activeElement;
             const cell = active?.parentElement;
@@ -559,9 +748,12 @@
             const col = parseInt(cell.dataset.col);
         });
 
+
+        loadWordlist();
         createGrid();
         updateNumbers();
         updateClueEditor();
+        console.log('Word list length:', wordList.length);
 
         window.addEventListener('beforeunload', (e) => {
             // This message is usually ignored by modern browsers,
