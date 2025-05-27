@@ -7,20 +7,20 @@ let wordListReady = false;
 function loadWordlist() {
     console.log("Fetching wordList...");
     fetch('words.txt')
-      .then(response => {
-        if (!response.ok) {
-          throw new Error('Network response was not ok');
-        }
-        return response.text();
-      })
-      .then(text => {
-        wordList = text.toUpperCase().split('\n').map(line => line.trim()).filter(Boolean);
-        console.log(wordList.length + " Loaded"); // Output the list to the console
-        wordListReady = true;
-      })
-      .catch(error => {
-        console.error('Error fetching the file:', error);
-      });
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Network response was not ok');
+            }
+            return response.text();
+        })
+        .then(text => {
+            wordList = text.toUpperCase().split('\n').map(line => line.trim()).filter(Boolean);
+            console.log(wordList.length + " Loaded"); // Output the list to the console
+            wordListReady = true;
+        })
+        .catch(error => {
+            console.error('Error fetching the file:', error);
+        });
 }
 
 function createGrid() {
@@ -56,7 +56,7 @@ function createGrid() {
                     highlightLine(r, c);
                     e.preventDefault();
                 }
-                if (e.key === ',') toggleClass(cell, 'circled'); 
+                if (e.key === ',') toggleClass(cell, 'circled');
                 if (e.key === '~') toggleClass(cell, 'highlighted');
 
                 // Arrow key navigation
@@ -119,7 +119,7 @@ function createGrid() {
                 const row = r;
                 const col = c;
                 clearHighlights();
-                
+
                 cell.classList.add('focused');
 
                 if (!grid[r][c].classList.contains('blacked')) {
@@ -351,7 +351,7 @@ function exportImage() {
 
 
 function applySymmetry(row, col, action) {
-    if (!document.getElementById('rotational_symmetry').checked) return;
+    if (document.getElementById('rule-style').value == 'cryptic') return;
     const symRow = size - 1 - row;
     const symCol = size - 1 - col;
     if (symRow === row && symCol === col) return; // Don't double toggle center cell in odd grids
@@ -460,10 +460,141 @@ function highlightLine(row, col) {
 function clearHighlights() {
     for (let r = 0; r < size; r++) {
         for (let c = 0; c < size; c++) {
-            grid[r][c].classList.remove('highlighted-word');            
+            grid[r][c].classList.remove('highlighted-word');
         }
     }
     document.querySelectorAll('.cell.focused').forEach(cell => cell.classList.remove('focused'));
+}
+
+function checkDesignRules(style) {
+    const errors = [];
+
+    function isWhite(r, c) {
+        return r >= 0 && r < size && c >= 0 && c < size && !grid[r][c].classList.contains('blacked');
+    }
+
+    // Check grid connectivity using BFS
+    function isConnected() {
+        const visited = Array.from({ length: size }, () => Array(size).fill(false));
+        let queue = [];
+
+        outer: for (let r = 0; r < size; r++) {
+            for (let c = 0; c < size; c++) {
+                if (isWhite(r, c)) {
+                    queue.push([r, c]);
+                    visited[r][c] = true;
+                    break outer;
+                }
+            }
+        }
+
+        const directions = [[0, 1], [1, 0], [-1, 0], [0, -1]];
+        let count = 1;
+
+        while (queue.length > 0) {
+            const [r, c] = queue.shift();
+            for (let [dr, dc] of directions) {
+                const nr = r + dr, nc = c + dc;
+                if (isWhite(nr, nc) && !visited[nr][nc]) {
+                    visited[nr][nc] = true;
+                    queue.push([nr, nc]);
+                    count++;
+                }
+            }
+        }
+
+        let totalWhite = 0;
+        for (let r = 0; r < size; r++) {
+            for (let c = 0; c < size; c++) {
+                if (isWhite(r, c)) totalWhite++;
+            }
+        }
+
+        return count === totalWhite;
+    }
+
+    function checkWords() {
+        const minWordLength = 3;
+        for (let r = 0; r < size; r++) {
+            let length = 0;
+            for (let c = 0; c <= size; c++) {
+                if (c < size && isWhite(r, c)) {
+                    length++;
+                } else {
+                    if (length > 0 && length < minWordLength)
+                        errors.push(`Across word at row ${r + 1} is too short (length ${length})`);
+                    length = 0;
+                }
+            }
+        }
+        for (let c = 0; c < size; c++) {
+            let length = 0;
+            for (let r = 0; r <= size; r++) {
+                if (r < size && isWhite(r, c)) {
+                    length++;
+                } else {
+                    if (length > 0 && length < minWordLength)
+                        errors.push(`Down word at col ${c + 1} is too short (length ${length})`);
+                    length = 0;
+                }
+            }
+        }
+    }
+
+    function checkUncheckedLetters() {
+        // For cryptic/quick: Check each white cell has at least one cross-check (i.e., letter is checked)
+        for (let r = 0; r < size; r++) {
+            for (let c = 0; c < size; c++) {
+                if (!isWhite(r, c)) continue;
+
+                const across = (c > 0 && isWhite(r, c - 1)) || (c < size - 1 && isWhite(r, c + 1));
+                const down = (r > 0 && isWhite(r - 1, c)) || (r < size - 1 && isWhite(r + 1, c));
+                if (!across && !down) {
+                    errors.push(`Cell at (${r + 1},${c + 1}) is isolated`);
+                } else if (!(across && down) && style === 'american') {
+                    errors.push(`Uncrossed letter at (${r + 1},${c + 1}) in American-style grid`);
+                }
+            }
+        }
+    }
+
+    function checkAllCellsFilledOrBlacked() {
+        let issues = [];
+        for (let r = 0; r < size; r++) {
+            for (let c = 0; c < size; c++) {
+                const cell = grid[r][c];
+                const input = cell.querySelector('input').value.trim();
+                const isBlacked = cell.classList.contains('blacked');
+
+                if (!isBlacked && input === '') {
+                    issues.push({ row: r, col: c });
+                }
+            }
+        }
+
+        if (issues.length > 0) {
+            errors.push(`Design Rule Violation: ${issues.length} cell(s) are neither filled nor blacked out.`);
+            console.warn("Unfilled cells:", issues);
+            return false;
+        } else {
+            return true;
+        }
+    }
+
+    if (!isConnected()) {
+        errors.push("Grid is not fully connected");
+    }
+
+    checkWords();
+    checkUncheckedLetters();
+    checkAllCellsFilledOrBlacked();
+
+    // Display results
+    if (errors.length === 0) {
+        alert(`✅ ${style[0].toUpperCase() + style.slice(1)} style rules passed!`);
+    } else {
+        alert(`❌ Design rule issues:\n\n${errors.join('\n')}`);
+    }
 }
 
 document.addEventListener('keydown', (e) => {
@@ -485,3 +616,5 @@ loadWordlist();
 createGrid();
 updateNumbers();
 updateClueEditor();
+
+console.log(document.getElementById('rule-style').value);
