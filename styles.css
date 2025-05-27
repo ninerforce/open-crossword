@@ -302,4 +302,9 @@ form {
 #suggestion-list {
     overflow-y: auto;
     flex-grow: 1;
-  }
+}
+
+.no-match {
+    background-color: #ffcccc !important; /* light red background */
+    border: 2px solid red !important;
+}

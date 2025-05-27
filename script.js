@@ -41,7 +41,6 @@ function createGrid() {
             input.addEventListener('input', e => {
                 input.value = input.value.toUpperCase();
                 updateNumbers();
-                updateClueEditor();
             });
             input.addEventListener('keydown', e => {
                 const row = r;
@@ -407,25 +406,56 @@ function showSuggestions(pattern) {
         console.warn('Word list not ready yet');
         return;
     }
+
     pattern = pattern.toUpperCase();
     const regex = new RegExp('^' + pattern.replace(/\./g, '.') + '$');
     const matches = wordList.filter(word => regex.test(word));
 
     const list = document.getElementById('suggestion-list');
     list.innerHTML = '';
+
+    const cellsInWord = [];
+
+    // Identify the cells involved in this word
+    if (lastDirection === 'across') {
+        let r = grid.findIndex(row => row.includes(document.activeElement.parentNode));
+        let c = [...grid[r]].findIndex(cell => cell.contains(document.activeElement));
+        while (c > 0 && !grid[r][c - 1].classList.contains('blacked')) c--;
+        while (c < size && !grid[r][c].classList.contains('blacked')) {
+            cellsInWord.push(grid[r][c]);
+            c++;
+        }
+    } else {
+        let c = parseInt(document.activeElement.parentNode.dataset.col);
+        let r = parseInt(document.activeElement.parentNode.dataset.row);
+        while (r > 0 && !grid[r - 1][c].classList.contains('blacked')) r--;
+        while (r < size && !grid[r][c].classList.contains('blacked')) {
+            cellsInWord.push(grid[r][c]);
+            r++;
+        }
+    }
+
+    // Remove any previous no-match highlights
+    grid.flat().forEach(cell => cell.classList.remove('no-match'));
+
     if (matches.length === 0) {
         const li = document.createElement('li');
         li.textContent = '(no matches)';
         list.appendChild(li);
+
+        // Highlight the word in red
+        for (const cell of cellsInWord) {
+            cell.classList.add('no-match');
+        }
     } else {
-        // matches.slice(0, 10).forEach(word => {
-        matches.forEach(word => {
+        for (const word of matches) {
             const li = document.createElement('li');
             li.textContent = word;
             list.appendChild(li);
-        });
+        }
     }
 }
+
 
 function highlightLine(row, col) {
     clearHighlights();
