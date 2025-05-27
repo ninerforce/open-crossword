@@ -47,9 +47,10 @@ function createGrid() {
                     applySymmetry(r, c, 'blacked');
                     updateNumbers();
                     updateClueEditor();
+                    highlightLine(r, c);
                     e.preventDefault();
                 }
-                if (e.key === ',') toggleClass(cell, 'circled');
+                if (e.key === ',') toggleClass(cell, 'circled'); 
                 if (e.key === '~') toggleClass(cell, 'highlighted');
 
                 // Arrow key navigation
@@ -62,13 +63,13 @@ function createGrid() {
                     if (['ArrowUp', 'ArrowDown'].includes(e.key) && lastDirection == 'across') {
                         clearHighlights();
                         lastDirection = 'down'
-                        updateSuggestions(row, col);
+                        // updateSuggestions(row, col);
                         highlightLine(targetRow, targetCol);
                     }
                     else if (['ArrowLeft', 'ArrowRight'].includes(e.key) && lastDirection == 'down') {
                         clearHighlights();
                         lastDirection = 'across';
-                        updateSuggestions(row, col);
+                        // updateSuggestions(row, col);
                         highlightLine(targetRow, targetCol);
                     }
                     else {
@@ -87,7 +88,7 @@ function createGrid() {
                             targetInput.focus();
                         }
 
-                        updateSuggestions(row, col);
+                        // updateSuggestions(row, col);
                         highlightLine(targetRow, targetCol);
                     }
 
@@ -112,8 +113,13 @@ function createGrid() {
                 const row = r;
                 const col = c;
                 clearHighlights();
-                highlightLine(row, col);
-                updateSuggestions(row, col);
+                
+                cell.classList.add('focused');
+
+                if (!grid[r][c].classList.contains('blacked')) {
+                    highlightLine(row, col);
+                }
+                // updateSuggestions(row, col);
             });
 
             input.addEventListener('dblclick', () => {
@@ -123,7 +129,7 @@ function createGrid() {
                 const col = c;
                 clearHighlights();
                 highlightLine(row, col);
-                updateSuggestions(row, col);
+                // updateSuggestions(row, col);
             });
             document.addEventListener('click', (event) => {
                 // If the click target is NOT inside the grid element...
@@ -355,6 +361,7 @@ function applySymmetry(row, col, action) {
     }
 }
 
+/*
 function updateSuggestions(row, col) {
     if (!wordListReady) {
         console.warn('Suggestions blocked: word list not ready');
@@ -413,31 +420,35 @@ function showSuggestions(pattern) {
         });
     }
 }
+*/  
+
 
 function highlightLine(row, col) {
     clearHighlights();
 
-    if (lastDirection === 'across') {
-        let c = col;
-        // Move left until hitting edge or black cell
-        while (c >= 0 && !grid[row][c].classList.contains('blacked')) c--;
-        c++;
-        // Highlight across, excluding focused cell
-        while (c < size && !grid[row][c].classList.contains('blacked')) {
-            if (c !== col) {
-                grid[row][c].classList.add('highlighted-word');
-            }
+    if (!grid[row][col].classList.contains('blacked')) {
+        if (lastDirection === 'across') {
+            let c = col;
+            // Move left until hitting edge or black cell
+            while (c >= 0 && !grid[row][c].classList.contains('blacked')) c--;
             c++;
-        }
-    } else { // direction is down
-        let r = row;
-        while (r >= 0 && !grid[r][col].classList.contains('blacked')) r--;
-        r++;
-        while (r < size && !grid[r][col].classList.contains('blacked')) {
-            if (r !== row) {
-                grid[r][col].classList.add('highlighted-word');
+            // Highlight across, excluding focused cell
+            while (c < size && !grid[row][c].classList.contains('blacked')) {
+                if (c !== col) {
+                    grid[row][c].classList.add('highlighted-word');
+                }
+                c++;
             }
+        } else { // direction is down
+            let r = row;
+            while (r >= 0 && !grid[r][col].classList.contains('blacked')) r--;
             r++;
+            while (r < size && !grid[r][col].classList.contains('blacked')) {
+                if (r !== row) {
+                    grid[r][col].classList.add('highlighted-word');
+                }
+                r++;
+            }
         }
     }
 }
@@ -445,9 +456,10 @@ function highlightLine(row, col) {
 function clearHighlights() {
     for (let r = 0; r < size; r++) {
         for (let c = 0; c < size; c++) {
-            grid[r][c].classList.remove('highlighted-word');
+            grid[r][c].classList.remove('highlighted-word');            
         }
     }
+    document.querySelectorAll('.cell.focused').forEach(cell => cell.classList.remove('focused'));
 }
 
 document.addEventListener('keydown', (e) => {
@@ -465,7 +477,7 @@ window.addEventListener('beforeunload', (e) => {
     e.returnValue = '';
 });
 
-loadWordlist();
+// loadWordlist();
 createGrid();
 updateNumbers();
 updateClueEditor();

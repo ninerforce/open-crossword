@@ -10,22 +10,8 @@
     <link rel="stylesheet" href="styles.css" />
 </head>
 
-<body>
-    <div class="container" id="controls">
-        <label>Size: <input type="number" id="size" value="15" min="3" max="25" /></label>
-        <button onclick="resizeGrid()">Resize Grid</button>
-        <button onclick="saveJSON()">Save</button>
-        <button onclick="loadJSON()">Load</button>
-        <input type="file" id="fileInput" style="display:none" onchange="handleFile(event)">
-        <button onclick="document.getElementById('fileInput').click()">Import</button>
-        <button onclick="exportPDF()">Export PDF</button>
-        <button onclick="exportImage()">Export as Image</button>
-        <input type="checkbox" id="rotational_symmetry">
-        <label for="rotational_symmetry">
-            Force rotational symmetry
-        </label>
-
-    </div>
+<body style="background-color: var(--baby-powder);">
+    
     <h1 style="
     background-color: var(--amaranth-purple);
     width: 100vw;
@@ -33,35 +19,60 @@
     padding: 40px 0;
     color: white;
     text-align: center;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+
     ">
         Open Crossword
     </h1>
     <p></p>
 
-    <form>
+    <div class="container" id="controls">
+        <label>Size: <input type="number" id="size" value="15" min="3" max="25" /></label>
+        <button onclick="resizeGrid()">Resize Grid</button>
+        <button onclick="saveJSON()">Save</button>
+        <button onclick="loadJSON()">Load</button>
+        <input type="file" id="fileInput" style="display:none" onchange="handleFile(event)">
+        <!-- <button onclick="document.getElementById('fileInput').click()">Import</button> -->
+        <button onclick="exportPDF()">Export PDF</button>
+        <button onclick="exportImage()">Export as Image</button>
+        <input type="text" id="filename" name="filename" placeholder="Crossword Name" />
+        <input type="checkbox" id="rotational_symmetry">
+        <label for="rotational_symmetry">
+            Symmetry
+        </label>
+    </div>
 
-        <input type="text" id="filename" name="filename " placeholder="Crossword Name">
-    </form>
+    
     <p>
 
     </p>
     <div id="main-container">
+        <div id="clue-editor">
+            <h3>Across</h3>
+            <div id="across-clues"></div>
+            <h3>Down</h3>
+            <div id="down-clues"></div>
+        </div>
         <div id="grid"></div>
-        <div id="word-list-box" style="width: 200px; text-align: left;">
+        <div id="word-list-box">
             <h3>Suggestions</h3>
             <ul id="suggestion-list" style="list-style: none; padding: 0;"></ul>
         </div>
     </div>
-    <div id="clue-editor">
-        <h3>Across</h3>
-        <div id="across-clues"></div>
-        <h3>Down</h3>
-        <div id="down-clues"></div>
+    
+    <div id="credits">
+        
+        
+        <a href="https://github.com/ninerforce/open-crossword">Created by ninerforce</a>
+
     </div>
+
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <script src="script.js" defer></script>
+
+    
 </body>
 
 </html>

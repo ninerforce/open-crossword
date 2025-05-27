@@ -46,5 +46,5 @@ Open Crossword is a lightweight, locally hosted crossword puzzle editor built en
 
 ## Acknowledgements
 
-Thanks to `https://favicon.io` for the Favicon
-Thanks to dwyl for the word list from `https://github.com/dwyl/english-words`
+- Thanks to `https://favicon.io` for the Favicon.
+- Thanks to dwyl for the word list from `https://github.com/dwyl/english-words`.
