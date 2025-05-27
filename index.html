@@ -11,12 +11,12 @@
 </head>
 
 <body style="background-color: var(--baby-powder);">
-    
+
     <h1 style="
     background-color: var(--amaranth-purple);
     width: 100vw;
     margin: 0;
-    padding: 40px 0;
+    padding: 5px 0;
     color: white;
     text-align: center;
     box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
@@ -26,7 +26,7 @@
     </h1>
     <p></p>
 
-    <div class="container" id="controls">
+    <div class="container" id="controls" style="margin: 0;">
         <label>Size: <input type="number" id="size" value="15" min="3" max="25" /></label>
         <button onclick="resizeGrid()">Resize Grid</button>
         <button onclick="saveJSON()">Save</button>
@@ -42,7 +42,7 @@
         </label>
     </div>
 
-    
+
     <p>
 
     </p>
@@ -52,17 +52,37 @@
             <div id="across-clues"></div>
             <h3>Down</h3>
             <div id="down-clues"></div>
-        </div>
+        </div> 
         <div id="grid"></div>
-        <div id="word-list-box">
-            <h3>Suggestions</h3>
-            <ul id="suggestion-list" style="list-style: none; padding: 0;"></ul>
+        <div id="word-list-box" style="display: flex; flex-direction: column; width: 100%; max-height: 735px;">
+            <!-- Heading box -->
+            <div id="suggestion-header" style="
+                background-color: white;
+                padding: 10px 0;
+                text-align: left;
+                font-weight: bold;
+                font-size: 1.2em;
+            ">
+                Suggestions
+            </div>
+        
+            <!-- Scrollable suggestion list -->
+            <div id="suggestion-scrollbox" style="
+                overflow-y: auto;
+                flex-grow: 1;
+                background: white;
+                padding: 10px;
+                border: 1px solid #a63446;
+                width: 300px;
+            ">
+                <ul id="suggestion-list" style="list-style: none; padding: 0; margin: 0;"></ul>
+            </div>
         </div>
     </div>
-    
+
     <div id="credits">
-        
-        
+
+
         <a href="https://github.com/ninerforce/open-crossword">Created by ninerforce</a>
 
     </div>
@@ -72,7 +92,7 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <script src="script.js" defer></script>
 
-    
+
 </body>
 
 </html>

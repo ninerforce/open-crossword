@@ -63,18 +63,21 @@ body {
     padding: 0;
     margin: 0;
     outline: none;
+    z-index: 0;
 }
 
 .cell input:focus {
     background-color: var(--lapis-lazuli);
     border: 1px solid var(--black);
     opacity: 0.75;
+    z-index: 1;
 }
 
 
 .highlight-line {
     background-color: var(--lapis-lazuli);
     opacity: 0.5;
+    z-index: 1;
 }
 
 .cell .number {
@@ -241,8 +244,13 @@ form {
     border-color: black;
     text-align: left;
     width: 300px;
+    height: 735px;         /* Set the visible height */
+    overflow-y: auto;      /* Enable vertical scrolling */
 
 }
+
+
+
 
 .highlighted-word {
     background-color: var(--lapis-lazuli);
@@ -250,5 +258,10 @@ form {
 }
 
 #credits {
-    padding: 15px;
+    padding: 30px;
 }
+
+#suggestion-list {
+    overflow-y: auto;
+    flex-grow: 1;
+  }

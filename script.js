@@ -5,16 +5,22 @@ let wordList = [];
 let wordListReady = false;
 
 function loadWordlist() {
-    console.log("Fetching wordlist...");
+    console.log("Fetching wordList...");
     fetch('words.txt')
-        .then(response => response.text())
-        .then(text => {
-            wordlist = text.split('\n').map(word => word.trim().toUpperCase()).filter(Boolean);
-            console.log(`Loaded ${wordlist.length} words.`);
-        })
-        .catch(err => {
-            console.error('Failed to load word list:', err);
-        });
+      .then(response => {
+        if (!response.ok) {
+          throw new Error('Network response was not ok');
+        }
+        return response.text();
+      })
+      .then(text => {
+        wordList = text.toUpperCase().split('\n').map(line => line.trim()).filter(Boolean);
+        console.log(wordList.length + " Loaded"); // Output the list to the console
+        wordListReady = true;
+      })
+      .catch(error => {
+        console.error('Error fetching the file:', error);
+      });
 }
 
 function createGrid() {
@@ -63,13 +69,13 @@ function createGrid() {
                     if (['ArrowUp', 'ArrowDown'].includes(e.key) && lastDirection == 'across') {
                         clearHighlights();
                         lastDirection = 'down'
-                        // updateSuggestions(row, col);
+                        updateSuggestions(row, col);
                         highlightLine(targetRow, targetCol);
                     }
                     else if (['ArrowLeft', 'ArrowRight'].includes(e.key) && lastDirection == 'down') {
                         clearHighlights();
                         lastDirection = 'across';
-                        // updateSuggestions(row, col);
+                        updateSuggestions(row, col);
                         highlightLine(targetRow, targetCol);
                     }
                     else {
@@ -88,7 +94,7 @@ function createGrid() {
                             targetInput.focus();
                         }
 
-                        // updateSuggestions(row, col);
+                        updateSuggestions(row, col);
                         highlightLine(targetRow, targetCol);
                     }
 
@@ -119,7 +125,7 @@ function createGrid() {
                 if (!grid[r][c].classList.contains('blacked')) {
                     highlightLine(row, col);
                 }
-                // updateSuggestions(row, col);
+                updateSuggestions(row, col);
             });
 
             input.addEventListener('dblclick', () => {
@@ -129,7 +135,7 @@ function createGrid() {
                 const col = c;
                 clearHighlights();
                 highlightLine(row, col);
-                // updateSuggestions(row, col);
+                updateSuggestions(row, col);
             });
             document.addEventListener('click', (event) => {
                 // If the click target is NOT inside the grid element...
@@ -361,7 +367,6 @@ function applySymmetry(row, col, action) {
     }
 }
 
-/*
 function updateSuggestions(row, col) {
     if (!wordListReady) {
         console.warn('Suggestions blocked: word list not ready');
@@ -392,7 +397,7 @@ function updateSuggestions(row, col) {
         }
     }
 
-    console.log(`Pattern: ${pattern} | Wordlist length: ${wordlist.length}`);
+    console.log(`Pattern: ${pattern} | Wordlist length: ${wordList.length}`);
     showSuggestions(pattern);
 }
 
@@ -413,15 +418,14 @@ function showSuggestions(pattern) {
         li.textContent = '(no matches)';
         list.appendChild(li);
     } else {
-        matches.slice(0, 10).forEach(word => {
+        // matches.slice(0, 10).forEach(word => {
+        matches.forEach(word => {
             const li = document.createElement('li');
             li.textContent = word;
             list.appendChild(li);
         });
     }
 }
-*/  
-
 
 function highlightLine(row, col) {
     clearHighlights();
@@ -477,7 +481,7 @@ window.addEventListener('beforeunload', (e) => {
     e.returnValue = '';
 });
 
-// loadWordlist();
+loadWordlist();
 createGrid();
 updateNumbers();
 updateClueEditor();
