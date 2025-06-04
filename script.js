@@ -68,12 +68,14 @@ function createGrid() {
                         clearHighlights();
                         lastDirection = 'down'
                         updateSuggestions(row, col);
+                        markNoMatchShortOrUnchecked();
                         highlightLine(targetRow, targetCol);
                     }
                     else if (['ArrowLeft', 'ArrowRight'].includes(e.key) && lastDirection == 'down') {
                         clearHighlights();
                         lastDirection = 'across';
                         updateSuggestions(row, col);
+                        markNoMatchShortOrUnchecked();
                         highlightLine(targetRow, targetCol);
                     }
                     else {
@@ -93,6 +95,7 @@ function createGrid() {
                         }
 
                         updateSuggestions(row, col);
+                        markNoMatchShortOrUnchecked();
                         highlightLine(targetRow, targetCol);
                         updateClueEditor();
                     }
@@ -125,6 +128,7 @@ function createGrid() {
                     highlightLine(row, col);
                 }
                 updateSuggestions(row, col);
+                markNoMatchShortOrUnchecked();
             });
 
             input.addEventListener('dblclick', () => {
@@ -135,6 +139,7 @@ function createGrid() {
                 clearHighlights();
                 highlightLine(row, col);
                 updateSuggestions(row, col);
+                markNoMatchShortOrUnchecked();
             });
             document.addEventListener('click', (event) => {
                 // If the click target is NOT inside the grid element...
@@ -513,14 +518,16 @@ function showSuggestions(pattern) {
             cell.classList.add('no-match');
         }
     } else {
+        let count = 0;
         for (const word of matches) {
+            if (count >= 100) break;
             const li = document.createElement('li');
             li.textContent = word;
             list.appendChild(li);
+            count++;
         }
     }
 }
-
 
 function highlightLine(row, col) {
     clearHighlights();
@@ -559,6 +566,84 @@ function clearHighlights() {
         }
     }
     document.querySelectorAll('.cell.focused').forEach(cell => cell.classList.remove('focused'));
+}
+
+function markNoMatchUncheckedOrShortWords() {
+    //pass
+
+    
+    /*
+    // Clear previous too-short marks
+    grid.flat().forEach(cell => cell.classList.remove('too-short'));
+
+    // Helper: check if cell has horizontal neighbor (left or right, non-blacked)
+    function hasHorizontalNeighbor(r, c) {
+        return (c > 0 && !grid[r][c - 1].classList.contains('blacked')) ||
+               (c < size - 1 && !grid[r][c + 1].classList.contains('blacked'));
+    }
+
+    // Helper: check if cell has vertical neighbor (up or down, non-blacked)
+    function hasVerticalNeighbor(r, c) {
+        return (r > 0 && !grid[r - 1][c].classList.contains('blacked')) ||
+               (r < size - 1 && !grid[r + 1][c].classList.contains('blacked'));
+    }
+
+    // Mark unchecked cells: cells without both neighbors
+    for (let r = 0; r < size; r++) {
+        for (let c = 0; c < size; c++) {
+            const cell = grid[r][c];
+            if (cell.classList.contains('blacked')) continue; // skip blacked cells
+
+            const horiz = hasHorizontalNeighbor(r, c);
+            const vert = hasVerticalNeighbor(r, c);
+
+            if (!horiz || !vert) {
+                cell.classList.add('too-short');
+            }
+        }
+    }
+
+    // Helper to mark word cells if word length <= 2
+    function markWordIfShort(cells) {
+        if (cells.length <= 2) {
+            cells.forEach(cell => cell.classList.add('too-short'));
+        }
+    }
+
+    // Mark all short across words
+    for (let r = 0; r < size; r++) {
+        let c = 0;
+        while (c < size) {
+            if (grid[r][c].classList.contains('blacked')) {
+                c++;
+                continue;
+            }
+            let wordCells = [];
+            while (c < size && !grid[r][c].classList.contains('blacked')) {
+                wordCells.push(grid[r][c]);
+                c++;
+            }
+            markWordIfShort(wordCells);
+        }
+    }
+
+    // Mark all short down words
+    for (let c = 0; c < size; c++) {
+        let r = 0;
+        while (r < size) {
+            if (grid[r][c].classList.contains('blacked')) {
+                r++;
+                continue;
+            }
+            let wordCells = [];
+            while (r < size && !grid[r][c].classList.contains('blacked')) {
+                wordCells.push(grid[r][c]);
+                r++;
+            }
+            markWordIfShort(wordCells);
+        }
+    }
+    */
 }
 
 function checkDesignRules(style) {

@@ -309,6 +309,12 @@ form {
     border: 2px solid red !important;
 }
 
+.too-short {
+    background-color: #ffcccc !important; /* light red background */
+    border: 2px solid red !important;
+}
+
+
 .dropdown {
     position: relative;
     display: inline-block;
