@@ -3,7 +3,6 @@ let grid = [];
 let lastDirection = 'across';
 let wordList = [];
 let wordListReady = false;
-
 function loadWordlist() {
     console.log("Fetching wordList...");
     fetch('words.txt')
@@ -95,6 +94,7 @@ function createGrid() {
 
                         updateSuggestions(row, col);
                         highlightLine(targetRow, targetCol);
+                        updateClueEditor();
                     }
 
 
@@ -155,6 +155,7 @@ function resizeGrid() {
     size = parseInt(document.getElementById('size').value);
     createGrid();
     updateNumbers();
+    clearClues();
     updateClueEditor();
 }
 
@@ -225,6 +226,15 @@ function updateClueEditor() {
     }
 }
 
+// Fully clear all clues and reset tracking (e.g., when loading a new crossword)
+function clearClues() {
+    const acrossClues = document.getElementById('across-clues');
+    const downClues = document.getElementById('down-clues');
+    acrossClues.innerHTML = '';
+    downClues.innerHTML = '';
+    previousWords = {};
+}
+
 function addClueRow(container, number, word, direction) {
     const div = document.createElement('div');
     div.className = 'clue-entry';
@@ -262,6 +272,7 @@ function loadJSON() {
 }
 
 function handleFile(event) {
+    clearClues();
     const file = event.target.files[0];
     const reader = new FileReader();
     reader.onload = e => {
@@ -313,6 +324,7 @@ function exportPDF() {
 }
 
 function exportImage() {
+    clearHighlights();
     const gridEl = document.getElementById('grid');
 
     // Clone the grid
@@ -348,6 +360,59 @@ function exportImage() {
     });
 }
 
+function exportBlankImage() {
+    clearHighlights();
+    const gridEl = document.getElementById('grid');
+
+    // Clone the grid
+    const clone = gridEl.cloneNode(true);
+
+    // Replace each input with a div, *without* showing the letter
+    clone.querySelectorAll('input').forEach(input => {
+        const parent = input.parentElement;
+
+        // Create a new div to replace the input
+        const cellDiv = document.createElement('div');
+        cellDiv.className = parent.className; // retain cell class, e.g., for styling
+        cellDiv.style.cssText = parent.style.cssText; // copy inline styles
+
+        // Retain existing decorations
+        if (parent.classList.contains('circle')) {
+            cellDiv.classList.add('circle');
+        }
+        if (parent.classList.contains('highlight')) {
+            cellDiv.classList.add('highlight');
+        }
+
+        // Preserve the number if present
+        const number = parent.querySelector('.number');
+        if (number) {
+            const numberClone = number.cloneNode(true);
+            cellDiv.appendChild(numberClone);
+        }
+
+        // Replace the parent cell with the new div
+        parent.replaceWith(cellDiv);
+    });
+
+    // Create a temporary container to render the image
+    const tempContainer = document.createElement('div');
+    tempContainer.style.position = 'absolute';
+    tempContainer.style.left = '-9999px';
+    tempContainer.appendChild(clone);
+    document.body.appendChild(tempContainer);
+
+    html2canvas(clone).then(canvas => {
+        // Remove the temporary container
+        document.body.removeChild(tempContainer);
+
+        // Create download link
+        const link = document.createElement('a');
+        link.download = 'crossword.png';
+        link.href = canvas.toDataURL();
+        link.click();
+    });
+}
 
 function applySymmetry(row, col, action) {
     if (document.getElementById('rule-style').value == 'cryptic') return;

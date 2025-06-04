@@ -37,8 +37,15 @@
         <button onclick="loadJSON()">Load</button>
         <input type="file" id="fileInput" style="display:none" onchange="handleFile(event)">
         <!-- <button onclick="document.getElementById('fileInput').click()">Import</button> -->
-        <button onclick="exportPDF()">Export PDF</button>
-        <button onclick="exportImage()">Export as Image</button>        
+        <!-- <button onclick="exportPDF()">Export PDF</button> -->
+        <div class="dropdown">
+            <button class="dropbtn">Export Options</button>
+            <div class="dropdown-content">
+                <button onclick="exportImage()" style="width: 160px;">Export Image</button>
+                <button onclick="exportBlankImage()" style="width: 160px;">Export Blank Image</button>
+            </div>
+        </div> 
+                
         <button onclick="checkDesignRules(document.getElementById('rule-style').value)">Check Design Rules</button>
         <input type="text" id="filename" name="filename" placeholder="Crossword Name" />
         <!-- <input type="checkbox" id="rotational_symmetry">
