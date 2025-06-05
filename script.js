@@ -520,7 +520,12 @@ function showSuggestions(pattern) {
     } else {
         let count = 0;
         for (const word of matches) {
-            if (count >= 100) break;
+            if (count >= 100) {
+                const li = document.createElement('li');
+                li.textContent = "(And more...)";
+                list.appendChild(li);
+                break;
+            }
             const li = document.createElement('li');
             li.textContent = word;
             list.appendChild(li);
@@ -571,7 +576,7 @@ function clearHighlights() {
 function markNoMatchUncheckedOrShortWords() {
     //pass
 
-    
+
     /*
     // Clear previous too-short marks
     grid.flat().forEach(cell => cell.classList.remove('too-short'));
